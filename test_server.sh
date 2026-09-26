@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -uo pipefail
+ROOT="$(cd "$(dirname "$0")"&&pwd)";VENDOR="${VENDOR:-$HOME/.cache/vendor}";JAVA_HOME="${JAVA_HOME:-$(find "$VENDOR" -maxdepth 1 -type d -name 'jdk-17*'|head -1)}";JAVA="$JAVA_HOME/bin/java"
+TEST="$ROOT/testserver";rm -rf "$TEST";mkdir -p "$TEST/config/mods";cp "$ROOT/dist/RBMK-White-Reactor-v4.0.1.jar" "$TEST/config/mods/"
+cd "$TEST";mkfifo cmd.fifo;HOME="$TEST" "$JAVA" -Xmx450m -jar "$VENDOR/server-release.jar" <cmd.fifo >server.log 2>&1 & PID=$!;exec 3>cmd.fifo
+send(){ echo "$1" >&3;sleep "${2:-2}"; }
+sleep 10;send mods 2;send 'config autoPause false' 1;send 'host Ancient_Caldera survival' 10
+send 'js var t=Vars.state.rules.defaultTeam;Vars.state.rules.teams.get(t).cheat=true;Vars.state.rules.infiniteResources=true;"world ready"' 1
+send 'js var n=["pellet-plant","cladding-mill","fuel-assembly-plant","water-treatment","rbmk-plant"];var s="";for(var i=0;i<n.length;i++){var k=Vars.content.block("rbmk-white-reactor-"+n[i]);s+=k+(k.drawer?":"+k.drawer.getClass().getSimpleName():"")+" | ";}s' 1
+send 'js var p=null;for(var x=25;x<Vars.world.width()-40&&p==null;x++)for(var y=25;y<Vars.world.height()-40&&p==null;y++){var q=Vars.world.tile(x,y);if(q!=null&&!q.solid())p=q;}global.x0=p.x;global.y0=p.y;var t=Vars.state.rules.defaultTeam;var names=["pellet-plant","cladding-mill","fuel-assembly-plant","water-treatment","rbmk-plant"];for(var i=0;i<5;i++)Vars.world.tile(global.x0+i*10,global.y0).setNet(Vars.content.block("rbmk-white-reactor-"+names[i]),t,0);"chain placed at "+global.x0+","+global.y0' 2
+send 'js var b=Vars.world.tile(global.x0,global.y0).build;b.items.add(Items.thorium,20);b.items.add(Items.silicon,20);for(var i=0;i<500;i++)b.updateTile();"pellets="+b.items.get(Vars.content.item("rbmk-white-reactor-uranium-pellets"))' 2
+send 'js var b=Vars.world.tile(global.x0+10,global.y0).build;b.items.add(Items.titanium,30);b.items.add(Items.metaglass,15);for(var i=0;i<500;i++)b.updateTile();"cladding="+b.items.get(Vars.content.item("rbmk-white-reactor-zirconium-cladding"))' 2
+send 'js var b=Vars.world.tile(global.x0+20,global.y0).build;b.items.add(Vars.content.item("rbmk-white-reactor-uranium-pellets"),24);b.items.add(Vars.content.item("rbmk-white-reactor-zirconium-cladding"),12);b.items.add(Items.graphite,12);for(var i=0;i<900;i++)b.updateTile();"assemblies="+b.items.get(Vars.content.item("rbmk-white-reactor-uranium-assembly"))' 2
+send 'js var b=Vars.world.tile(global.x0+30,global.y0).build;b.liquids.add(Liquids.water,100);for(var i=0;i<600;i++)b.updateTile();"deminWater="+b.liquids.get(Vars.content.liquid("rbmk-white-reactor-demineralized-water")).toFixed(1)' 2
+send 'js var b=Vars.world.tile(global.x0+40,global.y0).build;global.rpos=b.tile.pos();b.items.add(Vars.content.item("rbmk-white-reactor-uranium-assembly"),24);b.liquids.add(Vars.content.liquid("rbmk-white-reactor-demineralized-water"),400);"reactor consumers="+b.block.consumers.length+", itemFilter="+b.block.itemFilter[Vars.content.item("rbmk-white-reactor-uranium-assembly").id]+", liquidFilter="+b.block.liquidFilter[Vars.content.liquid("rbmk-white-reactor-demineralized-water").id]' 2
+send 'js var b=Vars.world.tile(global.rpos).build;b.expert=false;b.automatic=true;b.loadDemand=100;for(var i=0;i<2200;i++)b.updateTile();"guided power="+b.powerLevel.toFixed(3)+" eff="+b.productionEfficiency.toFixed(3)+" output/t="+b.getPowerProduction().toFixed(1)+" stable="+(b.dangerTime==0)' 2
+send 'js var b=Vars.world.tile(global.rpos).build;b.expert=true;b.automatic=false;for(var i=0;i<211;i++)b.rodSet[i]=82;for(var i=0;i<8;i++)b.pumpSet[i]=100;b.feedwater=100;b.turbineValve=100;for(var i=0;i<2600;i++)b.updateTile();"expert power="+b.powerLevel.toFixed(3)+" eff="+b.productionEfficiency.toFixed(3)+" output/t="+b.getPowerProduction().toFixed(1)+" ORM="+b.orm.toFixed(1)+" temp="+b.temperature.toFixed(2)+" pressure="+b.pressure.toFixed(2)+" danger="+b.dangerTime.toFixed(1)' 2
+send 'js var b=Vars.world.tile(global.rpos).build;b.rodActual[0]=10;b.rodActual[210]=95;for(var i=0;i<20;i++)b.updateTile();"individualRods="+b.rodSet.length+" spatialPeak="+b.spatialPeak.toFixed(2)' 1
+send 'js var b=Vars.world.tile(global.rpos).build;b.voidFraction=.55;b.powerLevel=1.1;for(var i=0;i<211;i++)b.rodActual[i]=92;b.rodPosition=92;b.orm=4;b.scram();"AZ5="+b.scrammed+" pulse="+b.tipPulse.toFixed(2)' 1
+send 'save 1' 3;send stop 2;send 'load 1' 8
+send 'js var b=Vars.world.tile(global.rpos).build;"reload="+b+" expert="+b.expert+" banks="+b.bankSet.length+" pumps="+b.pumpSet.length+" power="+b.powerLevel.toFixed(3)' 2
+send 'js var b=Vars.world.tile(global.rpos).build;b.temperature=1.2;b.dangerTime=120;b.updateTile();"meltdown buildingAlive="+(Vars.world.tile(global.rpos).build!=null)' 2
+send exit 2;exec 3>&-;wait $PID 2>/dev/null
+cat server.log|tail -n 120
+if grep -nE 'Exception|EcmaError|Error:|Caused by|NoSuch|not found|Missing' server.log|grep -v ErrorHandler;then echo 'TEST FAILED';exit 1;else echo 'TEST PASSED: v4.0.1 on v160.5 headless; supply chain, requirements, guided/expert, save/reload, meltdown';fi

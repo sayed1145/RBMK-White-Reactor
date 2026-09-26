@@ -1,0 +1,15 @@
+RBMK White Reactor 4.0.1
+Target game: Mindustry v8 build 160.5 (latest stable, 2026-09-20)
+Official tag/commit: v160.5 / 067c720a8817c1c9fb586c03898a7d948caaed56
+Build date: 2026-09-25 (Asia/Shanghai)
+Java source/target: 17; Android DEX min API 21 (d8/r8 8.9.35, android-35 library)
+Rendering: real 3D meshes; offline perspective z-buffer bake (SSAA, AO) + runtime per-face projected live parts + baked front occlusion layer; no custom shader
+Reactor: 709 channels on a full-circle square lattice; 211 CPS rods placed by farthest-point sampling (SAR/ER/AC/MR), each an independently animated 3D column; 3-level LOD
+Factories: pellet plant (12-punch turret), cladding mill (flywheel/crank/roll stand), fuel assembly plant (3-axis gantry, 18-slot bundle), water treatment (clarifier bridge, ion-exchange columns, pump)
+CPU per draw (desktop JVM, full detail): reactor 0.27 ms / 3555 quads; factories 0.02-0.16 ms / 189-854 quads
+Headless test: PASS (official v160.5 server)
+Offline draw test: PASS (reactor 40 frames + 4 factories x 36 frames through the real draw code; no shader; no invalid vertices)
+4.0.1 fix: placed blocks rendered solid black. Mindustry calls Block.load() once against the temporary atlas used
+  while packing mod sprites (its textures are disposed afterwards) and again after the final atlas exists; the model
+  cached the first, stale regions. BlockModel now re-resolves its baked layers whenever Core.atlas changes or a cached
+  texture is disposed, and resets Draw color/mixcol before drawing. Regression test: tools/preview/AtlasSwapTest.

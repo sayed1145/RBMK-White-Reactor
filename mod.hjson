@@ -1,0 +1,9 @@
+name: "rbmk-white-reactor"
+displayName: "RBMK 白色反应堆 Mk.III"
+author: "Arena Agent"
+main: "rbmk.RbmkMod"
+description: "Mindustry v8（build 160.5）安卓/桌面 Java 电站模组。反应堆与四座工厂均为真 3D 模型：离线透视 z-buffer 烘焙静态部分 + 运行时逐面 3D 绘制运动部件 + 前景遮挡层，零着色器、低开销。709 通道圆形堆芯中 211 根控制棒按最远点采样均匀分布于整圆，每根独立平滑动画；SAR/ER/AC/MR、双回路八主泵、分离鼓、汽轮机与 AZ-5 专业控制。"
+version: "4.0.1"
+minGameVersion: 160
+java: true
+hidden: false
